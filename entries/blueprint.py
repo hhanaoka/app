@@ -1,4 +1,5 @@
 from flask import Blueprint
+from flask import render_template
 from helpers import object_list
 from models import Entry, Tag
 
@@ -11,12 +12,16 @@ def index():
 
 @entries.route('/tags/')
 def tag_index():
-    pass
+    tags = Tag.query.order_by(Tag.name)
+    return object_list('entries/tag_index.html', tags)
 
 @entries.route('/tags/<slug>')
 def tag_details(slug):
-    pass
+    tag = Tag.query.filter(Tag.slug == slug).first_or_404()
+    entries = tag.entries.order_by(Entry.created_timestamp.desc())
+    return object_list('entries/tag_detail.html', entries, tag=tag)
 
 @entries.route('/<slug>')
 def detail(slug):
-    pass
+    entry = Entry.query.filter(Entry.slug == slug).first_or_404()
+    return render_template('entries/detail.html', entry=entry)
