@@ -5,7 +5,7 @@ from werkzeug import secure_filename
 from app import app, db
 from helpers import object_list
 from models import Entry, Tag
-from entries.forms import EntryForm, ImageForm
+from entries.forms import EntryForm, ImageForm, CommentForm
 from flask_login import login_required
 
 
@@ -99,8 +99,9 @@ def create():
 @entries.route('/<slug>/')
 @login_required
 def detail(slug):
-    entry = Entry.query.filter(Entry.slug == slug).first_or_404()
-    return render_template('entries/detail.html', entry=entry)
+    entry = get_entry_or_404(slug)
+    form = CommentForm(data={'entry_id': entry.id})
+    return render_template('entries/detail.html', entry=entry, form=form)
 
 
 @entries.route('<slug>/edit/', methods=['GET', 'POST'])

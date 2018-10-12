@@ -1,6 +1,13 @@
 import datetime
 import re
 from app import bcrypt, db, login_manager
+import urllib
+import hashlib
+
+
+@login_manager.user_loader
+def _user_loader(user_id):
+    return User.query.get(int(user_id))
 
 
 def slugify(s):
@@ -32,6 +39,7 @@ class Entry(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     tags = db.relationship('Tag', secondary=entry_tags,
                            backref=db.backref('entries', lazy='dynamic'))
+    comments = db.relationship('Comment', backref='entry', lazy='dynamic')
 
     def __init__(self, *args, **kwargs):
         super(Entry, self).__init__(*args, **kwargs)
@@ -123,6 +131,28 @@ class User(db.Model):
         return False
 
 
-@login_manager.user_loader
-def _user_loader(user_id):
-    return User.query.get(int(user_id))
+class Comment(db.Model):
+    STATUS_PENDING_MODERATION = 0
+    STATUS_PUBLIC = 1
+    STATUS_SPAM = 8
+    STATUS_DELETED = 9
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+    email = db.Column(db.String(64))
+    url = db.Column(db.String(100))
+    ip_address = db.Column(db.String(64))
+    body = db.Column(db.Text)
+    status = db.Column(db.Integer, default=STATUS_PUBLIC)
+    created_timestamp = db.Column(db.DateTime, default=datetime.datetime.now)
+    entry_id = db.Column(db.Integer, db.ForeignKey('entry.id'))
+
+    def __repr__(self):
+        return f'<Comment from {self.name}>'
+
+    def gravatar(self, size=75):
+        return 'http://www.gravatar.com/avatar.php?{0}'.format(
+            urllib.parse.urlencode({
+                'gravater_id': hashlib.md5(self.email.encode()).hexdigest(),
+                'size': str(size)})
+        )

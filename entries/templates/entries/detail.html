@@ -4,6 +4,16 @@
 
 {% block content_title %}{{entry.title}}{% endblock %}
 
+{% block extra_scripts %}
+    <script type="text/javascript" src="{{url_for('static', filename='js/comments.js')}}"></script>
+    <script type="text/javascript">
+        $(function(){
+            Comments.load({{entry.id}});
+            Comments.bindHandler();
+        });
+    </script>
+{% endblock %}
+
 {% block sidebar %}
 <ul class="well nav nav-list">
         {% if g.user==entry.author %}
@@ -22,4 +32,6 @@
 
 {% block content %}
 {{entry.body}}
+<h4 id="comment-form">Submit a comment</h4>
+{% include "entries/includes/comment_form.html" %}
 {% endblock %}
