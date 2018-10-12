@@ -45,6 +45,14 @@ class Entry(db.Model):
     def __repr__(self):
         return f'<Entry: {self.title}>'
 
+    @property
+    def tag_list(self):
+        return ','.join(tag.name for tag in self.tags)
+
+    @property
+    def tease(self):
+        return self.body[:100]
+
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,6 +74,7 @@ class User(db.Model):
     name = db.Column(db.String(64))
     slug = db.Column(db.String(64), unique=True)
     active = db.Column(db.Boolean, default=True)
+    admin = db.Column(db.Boolean, default=False)
     created_timestamp = db.Column(db.DateTime, default=datetime.datetime.now)
     entries = db.relationship('Entry', backref='author', lazy='dynamic')
 
@@ -88,6 +97,9 @@ class User(db.Model):
 
     def is_anonymous(self):
         return False
+
+    def is_admin(self):
+        return self.admin
 
     @staticmethod
     def make_password(plaintext):
